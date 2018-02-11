@@ -92,26 +92,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         // Build and start showing the notification.
-//        val notification = buildNotification(payload, false /*isIncoming*/)
-//        mNotificationManager?.notify(payload.id.toInt(), notification?.build())
-//
-//        // Add it to the tracking list so we can update it.
-//        outgoingPayloads.put(payload.id, notification)
+        val notification = buildNotification(payload, false /*isIncoming*/)
+        mNotificationManager?.notify(payload.id.toInt(), notification?.build())
+
+        // Add it to the tracking list so we can update it.
+        outgoingPayloads.put(payload.id, notification)
     }
 
-//    private fun buildNotification(payload: Payload, isIncoming: Boolean): NotificationCompat.Builder? {
-//        var notification = NotificationCompat.Builder(this)
-//        notification.setContentTitle(if (isIncoming) "Receiving..."  "Sending...")
-//        int size = payload.getSize();
-//        boolean indeterminate = false;
-//        if (size == -1) {
-//            // This is a stream payload, so we don't know the size ahead of time.
-//            size = 100;
-//            indeterminate = true;
-//        }
-//        notification.setProgress(size, 0, indeterminate);
-//        return notification;
-//    }
+    private fun buildNotification(payload: Payload, isIncoming: Boolean): NotificationCompat.Builder? {
+        var notification = NotificationCompat.Builder(this)
+        notification.setContentTitle(if (isIncoming) "Receiving..." else "Sending...")
+        var size = payload.asBytes()?.size
+        var indeterminate = false;
+        if (size == -1) {
+            // This is a stream payload, so we don't know the size ahead of time.
+            size = 100;
+            indeterminate = true;
+        }
+        notification.setProgress(size!!, 0, indeterminate);
+        return notification;
+    }
 
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
