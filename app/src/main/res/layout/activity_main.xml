@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="et.nearbyconnectionstest.MainActivity">
+
+    <Button
+        android:id="@+id/bt_advertise_star"
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="advertise star"
+        android:onClick="onClick"
+        />
+    <Button
+        android:layout_toRightOf="@id/bt_advertise_star"
+        android:id="@+id/bt_advertise_stop"
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="advertise stop"
+        android:onClick="onClick"
+        />
+
+    <Button
+        android:layout_marginTop="100dp"
+        android:layout_below="@id/bt_advertise_star"
+        android:id="@+id/bt_discover_star"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="discover star"
+        android:layout_centerHorizontal="true"
+        android:onClick="onClick"
+        />
+    <Button
+        android:layout_toRightOf="@id/bt_discover_star"
+        android:layout_marginTop="100dp"
+        android:layout_below="@id/bt_advertise_star"
+        android:id="@+id/bt_discover_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="discover stop"
+        android:layout_centerHorizontal="true"
+        android:onClick="onClick"
+        />
+
+</RelativeLayout>
