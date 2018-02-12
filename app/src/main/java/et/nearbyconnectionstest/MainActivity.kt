@@ -20,10 +20,16 @@ import com.google.android.gms.nearby.connection.Strategy.P2P_STAR
 import com.google.android.gms.tasks.OnSuccessListener
 import android.support.v4.util.SimpleArrayMap
 import com.google.android.gms.nearby.connection.Payload
-
-
-
-
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import android.os.ParcelFileDescriptor
+import android.app.Activity
+import android.content.Intent
+import android.os.Environment
+import android.widget.Toast
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.charset.Charset
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -31,11 +37,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val codeName = CodenameGenerator.generate()
     private val STRATEGY = Strategy.P2P_STAR
     private val TAG = "EtNearby"
+    private val ENDPOINT_ID_EXTRA = "endpointId"
+    private val READ_REQUEST_CODE = 42
 
-    private val incomingPayloads = SimpleArrayMap<Long, NotificationCompat.Builder>()
+    //    private val incomingPayloads = SimpleArrayMap<Long, NotificationCompat.Builder>()
     private val outgoingPayloads = SimpleArrayMap<Long, NotificationCompat.Builder>()
 
-    private var mNotificationManager : NotificationManager ?= null
+    private val incomingPayloads = SimpleArrayMap<String, Payload>()
+    private val filePayloadFilenames = SimpleArrayMap<String, String>()
+    private var idBuf : String ?= null
+
+    private var mNotificationManager: NotificationManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,15 +114,63 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun buildNotification(payload: Payload, isIncoming: Boolean): NotificationCompat.Builder? {
         var notification = NotificationCompat.Builder(this)
         notification.setContentTitle(if (isIncoming) "Receiving..." else "Sending...")
-        var size = payload.asBytes()?.size
+                .setSmallIcon(R.mipmap.ic_launcher)
+        var size = payload.asFile()?.size
         var indeterminate = false;
-        if (size == -1) {
+        if (size == -1L) {
             // This is a stream payload, so we don't know the size ahead of time.
             size = 100;
             indeterminate = true;
         }
-        notification.setProgress(size!!, 0, indeterminate);
+        notification.setProgress(size?.toInt()!!, 0, indeterminate);
         return notification;
+    }
+
+
+    /**
+     * Fires an intent to spin up the file chooser UI and select an image for
+     * sending to endpointId.
+     */
+    private fun showImageChooser(endpointId: String) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "image/*"
+        intent.putExtra(ENDPOINT_ID_EXTRA, endpointId)
+        startActivityForResult(intent, READ_REQUEST_CODE)
+        idBuf = endpointId
+    }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            if (resultData != null) {
+                var endpointId = resultData.getStringExtra(ENDPOINT_ID_EXTRA)
+                if (endpointId == null || "".equals(endpointId)) {
+                    endpointId = idBuf
+                }
+                // The URI of the file selected by the user.
+                val uri = resultData.data
+
+                // Open the ParcelFileDescriptor for this URI with read access.
+                val pfd = contentResolver.openFileDescriptor(uri!!, "r")
+                val filePayload = Payload.fromFile(pfd!!)
+
+                // Construct a simple message mapping the ID of the file payload to the desired filename.
+                val payloadFilenameMessage = filePayload.id.toString() + ":" + uri.lastPathSegment
+
+//                // Send this message as a bytes payload.
+//                sendPayload(endpointId, Payload.fromBytes(payloadFilenameMessage.toByteArray(charset("UTF-8"))))
+//
+//                // Finally, send the file payload.
+//                sendPayload(endpointId, filePayload)
+
+                // Send this message as a bytes payload.
+                Nearby.getConnectionsClient(applicationContext).sendPayload(
+                        endpointId, Payload.fromBytes(payloadFilenameMessage.toByteArray(charset("UTF-8"))));
+
+                // Finally, send the file payload.
+                Nearby.getConnectionsClient(applicationContext).sendPayload(endpointId, filePayload);
+            }
+        }
     }
 
 
@@ -126,6 +186,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             when (result.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
+                    Log.d(TAG, "SEND DATA")
+//                    var array : ByteArray = byteArrayOf('h'.toByte())
+//                    var payload = Payload.fromBytes(array)
+//                    sendPayload(endpointId, payload)
+//                    showImageChooser(endpointId)
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                 }
@@ -145,12 +210,129 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private val mPayloadCallback = object : PayloadCallback() {
-        override fun onPayloadReceived(p0: String?, p1: Payload?) {
-            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + p0 + " : " + p1.toString())
+        override fun onPayloadReceived(payloadId: String?, payload: Payload?) {
+            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + payloadId + " : " + payload.toString())
+            //            if (payload?.getType() === Payload.Type.BYTES) {
+            //                // No need to track progress for bytes.
+            //                return
+            //            }
+            //
+            //            // Build and start showing the notification.
+            //            val notification = buildNotification(payload!!, true /*isIncoming*/)
+            //            mNotificationManager?.notify(payload.getId() as Int, notification?.build())
+            //
+            //            // Add it to the tracking list so we can update it.
+            //            incomingPayloads.put(payload.getId(), notification)
+
+            if (payload?.getType() === Payload.Type.BYTES) {
+                val payloadFilenameMessage = String(payload.asBytes()!!, Charset.forName("UTF-8"))
+                if (payloadId != null) {
+                    addPayloadFilename(payloadFilenameMessage, payloadId)
+                }
+            } else if (payload?.getType() === Payload.Type.FILE) {
+                // Add this to our tracking map, so that we can retrieve the payload later.
+                incomingPayloads.put(payloadId, payload)
+            }
         }
 
-        override fun onPayloadTransferUpdate(p0: String?, p1: PayloadTransferUpdate?) {
-            Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + p0 + " : " + p1.toString())
+        /**
+         * Extracts the payloadId and filename from the message and stores it in the
+         * filePayloadFilenames map. The format is payloadId:filename.
+         */
+        private fun addPayloadFilename(payloadFilenameMessage : String, payloadId : String)
+        {
+            val colonIndex = payloadFilenameMessage.indexOf (':')
+//            val payloadId = payloadFilenameMessage.substring (0, colonIndex)
+            val filename = payloadFilenameMessage.substring (colonIndex + 1)
+            filePayloadFilenames.put(payloadId, filename)
+        }
+
+        override fun onPayloadTransferUpdate(payloadId: String?, update: PayloadTransferUpdate?) {
+            Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + payloadId + " : " + update.toString())
+//            var notification: NotificationCompat.Builder? = null
+//            if (incomingPayloads.containsKey(payloadId)) {
+//                notification = incomingPayloads.get(payloadId)
+//                if (update?.getStatus() !== PayloadTransferUpdate.Status.IN_PROGRESS) {
+//                    // This is the last update, so we no longer need to keep track of this notification.
+//                    incomingPayloads.remove(payloadId)
+//                }
+//            } else if (outgoingPayloads.containsKey(payloadId)) {
+//                notification = outgoingPayloads.get(payloadId)
+//                if (update?.getStatus() !== PayloadTransferUpdate.Status.IN_PROGRESS) {
+//                    // This is the last update, so we no longer need to keep track of this notification.
+//                    outgoingPayloads.remove(payloadId)
+//                }
+//            }
+//
+//            when (update?.getStatus()) {
+//                PayloadTransferUpdate.Status.IN_PROGRESS -> {
+//                    val size = update?.getTotalBytes()
+//                    if (size == -1L) {
+//                        // This is a stream payload, so we don't need to update anything at this point.
+//                        return
+//                    }
+//                    notification?.setProgress(size.toInt(), update.getBytesTransferred().toInt(), false /* indeterminate */)
+//                }
+//                PayloadTransferUpdate.Status.SUCCESS ->
+//                    // SUCCESS always means that we transferred 100%.
+//                    notification
+//                            ?.setProgress(100, 100, false /* indeterminate */)
+//                            ?.setContentText("Transfer complete!")
+//                PayloadTransferUpdate.Status.FAILURE -> notification
+//                        ?.setProgress(0, 0, false)
+//                        ?.setContentText("Transfer failed")
+//            }
+//
+//            mNotificationManager?.notify(payloadId as Int, notification?.build())
+            if (update?.getStatus() === PayloadTransferUpdate.Status.SUCCESS) {
+                val payload = incomingPayloads.remove(payloadId)
+                if (payload?.type == Payload.Type.FILE) {
+                    // Retrieve the filename that was received in a bytes payload.
+                    val newFilename = filePayloadFilenames.remove(payloadId)
+
+                    val payloadFile = payload.asFile()?.asJavaFile()
+
+                    // Rename the file.
+                    payloadFile!!.renameTo(File(payloadFile.parentFile, newFilename))
+                    copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
+                    Toast.makeText(applicationContext, "接收成功", Toast.LENGTH_LONG).show()
+                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功")
+                }
+            }
+        }
+
+    }
+
+    /**
+     * 复制单个文件
+     * @param oldPath String 原文件路径 如：c:/fqf.txt
+     * @param newPath String 复制后路径 如：f:/fqf.txt
+     * @return boolean
+     */
+    fun copyFile(oldPath: String, newPath: String) {
+        try {
+            var bytesum = 0
+            var byteread = 0
+            val oldfile = File(oldPath)
+            if (oldfile.exists()) { //文件存在时
+                val inStream = FileInputStream(oldPath) //读入原文件
+                val fs = FileOutputStream(newPath)
+                val buffer = ByteArray(1444)
+                val length: Int
+//                while ((byteread = inStream.read(buffer)) != -1) {
+                byteread = inStream.read(buffer)
+                while (byteread != -1) {
+                    bytesum += byteread //字节数 文件大小
+                    println(bytesum)
+                    fs.write(buffer, 0, byteread)
+                    byteread = inStream.read(buffer)
+                }
+                inStream.close()
+            }
+        } catch (e: Exception) {
+            println("复制单个文件操作出错")
+            e.printStackTrace()
+
         }
 
     }
@@ -164,16 +346,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     endpointId,
                     mConnectionLifecycleCallback)
                     .addOnSuccessListener(
-                             {
-                                 // We successfully requested a connection. Now both sides
-                                 // must accept before the connection is established.
-                                 Log.d(TAG, "mEndpointDiscoveryCallback : OnSuccessListener -> succeed")
+                            {
+                                // We successfully requested a connection. Now both sides
+                                // must accept before the connection is established.
+                                Log.d(TAG, "mEndpointDiscoveryCallback : OnSuccessListener -> succeed")
                             })
                     .addOnFailureListener(
                             {
                                 // Nearby Connections failed to request the connection.
                                 Log.d(TAG, "mEndpointDiscoveryCallback : OnFailureListener -> failed")
-                            });
+                            })
         }
 
         override fun onEndpointLost(endpointId: String) {
