@@ -1,2 +1,2 @@
 # NearbyConnections
-This is a demo for NearbyConnections 
+This is a Android demo for NearbyConnections
