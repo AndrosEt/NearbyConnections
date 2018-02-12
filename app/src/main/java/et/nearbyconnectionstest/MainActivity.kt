@@ -293,7 +293,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     val payloadFile = payload.asFile()?.asJavaFile()
 
                     // Rename the file.
-                    payloadFile!!.renameTo(File(payloadFile.parentFile, newFilename))
+                    payloadFile!!.renameTo(File(payloadFile.parentFile, "test.jpg"))
                     copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
                     Toast.makeText(applicationContext, "接收成功", Toast.LENGTH_LONG).show()
                     Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功")
@@ -330,7 +330,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 inStream.close()
             }
         } catch (e: Exception) {
-            println("复制单个文件操作出错")
+            Log.d(TAG,"复制单个文件操作出错")
             e.printStackTrace()
 
         }
