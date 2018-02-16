@@ -1,11 +1,9 @@
 package et.nearbyconnectionstest;
 
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,10 +30,8 @@ import com.google.android.gms.nearby.connection.Strategy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 
 /**
  * Created by William on 2018/2/12.
@@ -102,6 +98,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
 
 
     private void startAdvertising() {
+        Toast.makeText(getApplicationContext(), "startAdvertising", Toast.LENGTH_LONG).show();
         Nearby.getConnectionsClient(this).startAdvertising(
                 codeName,
                 getPackageName(),
@@ -112,6 +109,8 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                             @Override
                             public void onSuccess(Void unusedResult) {
                                 // We're advertising!
+                                Toast.makeText(getApplicationContext(), "We're advertising!", Toast.LENGTH_LONG).show();
+
                             }
                         })
                 .addOnFailureListener(
@@ -119,6 +118,33 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 // We were unable to start advertising.
+                                Toast.makeText(getApplicationContext(), "We were unable to start advertising.", Toast.LENGTH_LONG).show();
+
+                            }
+                        });
+    }
+
+    private void startDiscovery() {
+        Toast.makeText(getApplicationContext(), "startDiscovery", Toast.LENGTH_LONG).show();
+
+        Nearby.getConnectionsClient(this).startDiscovery(
+                getPackageName(),
+                mEndpointDiscoveryCallback,
+                new DiscoveryOptions(STRATEGY))
+                .addOnSuccessListener(
+                        new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void unusedResult) {
+                                // We're discovering!
+                                Toast.makeText(getApplicationContext(), "We're discovering!", Toast.LENGTH_LONG).show();
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // We were unable to start discovering.
+                                Toast.makeText(getApplicationContext(), "We were unable to start discovering.", Toast.LENGTH_LONG).show();
                             }
                         });
     }
@@ -207,27 +233,6 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                 }
             };
 
-    private void startDiscovery() {
-        Nearby.getConnectionsClient(this).startDiscovery(
-                getPackageName(),
-                mEndpointDiscoveryCallback,
-                new DiscoveryOptions(STRATEGY))
-                .addOnSuccessListener(
-                        new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void unusedResult) {
-                                // We're discovering!
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // We were unable to start discovering.
-                            }
-                        });
-    }
-
 
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
@@ -237,6 +242,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                         String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     Log.d(TAG, "mConnectionLifecycleCallback : onConnectionInitiated");
+                    Toast.makeText(getApplicationContext(), "mConnectionLifecycleCallback : onConnectionInitiated", Toast.LENGTH_LONG).show();
                     Nearby.getConnectionsClient(MainActivityForJava.this).acceptConnection(endpointId, mPayloadCallback);
                 }
 
@@ -248,6 +254,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                             // We're connected! Can now start sending and receiving data.
                             Log.d(TAG, "SEND DATA");
 //                            showImageChooser(endpointId);
+//                            Nearby.getConnectionsClient(MainActivityForJava.this).sendPayload(endpointId, Payload.fromBytes("1111".getBytes()));
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
@@ -270,36 +277,41 @@ public class MainActivityForJava extends Activity implements OnClickListener {
 
         @Override
         public void onPayloadReceived(String payloadId, Payload payload) {
-            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + payloadId + " : " + payload.toString());
+            byte[] bytes = payload.asBytes();
+            String s = new String(bytes);
+            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + payloadId + " : " + s);
+            incomingPayloads.put(payloadId, payload);
 
-            if (payload.getType() == Payload.Type.BYTES){
-                String payloadFilenameMessage = new String(payload.asBytes(), Charset.forName("UTF-8"));
-                if (payloadId != null) {
-                    addPayloadFilename(payloadFilenameMessage, payloadId);
-                }
-            } else if (payload.getType() == Payload.Type.FILE){
-                // Add this to our tracking map, so that we can retrieve the payload later.
-                incomingPayloads.put(payloadId, payload);
-            }
+//            if (payload.getType() == Payload.Type.BYTES){
+//                String payloadFilenameMessage = new String(payload.asBytes(), Charset.forName("UTF-8"));
+//                if (payloadId != null) {
+//                    addPayloadFilename(payloadFilenameMessage, payloadId);
+//                }
+//            } else if (payload.getType() == Payload.Type.FILE){
+//                // Add this to our tracking map, so that we can retrieve the payload later.
+//                incomingPayloads.put(payloadId, payload);
+//            }
         }
 
         @Override
         public void onPayloadTransferUpdate(String payloadId, PayloadTransferUpdate update) {
             Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + payloadId + " : " + update.toString());
             if (update.getStatus() == PayloadTransferUpdate.Status.SUCCESS){
-                Payload payload = incomingPayloads.remove(payloadId);
-                if (payload.getType() == Payload.Type.FILE){
-                    // Retrieve the filename that was received in a bytes payload.
-                    String newFilename = filePayloadFilenames.remove(payloadId);
-
-                    File payloadFile = payload.asFile().asJavaFile();
-
-                    // Rename the file.
-                    payloadFile.renameTo(new File(payloadFile.getParentFile(), "test.jpg"));
-//                    copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
-                    Toast.makeText(MainActivityForJava.this, "接收成功", Toast.LENGTH_LONG).show();
-                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功");
-                }
+//                Payload payload = incomingPayloads.remove(payloadId);
+//                if (payload.getType() == Payload.Type.FILE){
+//                    // Retrieve the filename that was received in a bytes payload.
+//                    String newFilename = filePayloadFilenames.remove(payloadId);
+//
+//                    File payloadFile = payload.asFile().asJavaFile();
+//
+//                    // Rename the file.
+//                    payloadFile.renameTo(new File(payloadFile.getParentFile(), "test.jpg"));
+////                    copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
+//                    Toast.makeText(MainActivityForJava.this, "接收成功", Toast.LENGTH_LONG).show();
+//                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功");
+//                } else if (payload.getType() == Payload.Type.BYTES) {
+                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功BYTES : " + update.toString());
+//                }
             }
         }
 
