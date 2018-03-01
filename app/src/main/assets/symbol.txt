@@ -1,0 +1,392 @@
+{
+  "id": "b0512039-2d75-4226-9a52-bd9fc8bcef58",
+  "payoutConfigurations": [
+    {
+      "amountRange": {
+        "isDefined": true,
+        "maxLength": 1000,
+        "minLength": 20
+      },
+      "autoTradeEnabled": false,
+      "intervals": [
+        60,
+        200,
+        300,
+        400
+      ],
+      "payoutInfo": {
+        "drawRefund": 100,
+        "lossRefund": 0,
+        "winPayout": 76
+      },
+      "symbols": [
+        "AMERICAbo",
+        "ASIAbo",
+        "COMMODbo",
+        "EUROPEbo",
+        "EXOTICSbo",
+        "METALSbo"
+      ]
+    },
+    {
+      "amountRange": {
+        "isDefined": true,
+        "maxLength": 1000,
+        "minLength": 20
+      },
+      "autoTradeEnabled": true,
+      "intervals": [
+        900
+      ],
+      "payoutInfo": {
+        "drawRefund": 100,
+        "lossRefund": 0,
+        "winPayout": 80
+      },
+      "symbols": [
+        "AMERICAbo",
+        "ASIAbo",
+        "COMMODbo",
+        "EUROPEbo",
+        "EXOTICSbo",
+        "METALSbo"
+      ]
+    },
+    {
+      "amountRange": {
+        "isDefined": true,
+        "maxLength": 1000,
+        "minLength": 20
+      },
+      "autoTradeEnabled": true,
+      "intervals": [
+        900
+      ],
+      "payoutInfo": {
+        "drawRefund": 100,
+        "lossRefund": 0,
+        "winPayout": 78
+      },
+      "symbols": [
+        "AUDJPYbo",
+        "AUDUSDbo",
+        "EURGBPbo",
+        "EURJPYbo",
+        "EURUSDbo",
+        "GBPJPYbo",
+        "GBPUSDbo",
+        "NZDJPYbo",
+        "NZDUSDbo",
+        "USDCADbo",
+        "USDCHFbo",
+        "USDJPYbo"
+      ]
+    },
+    {
+      "amountRange": {
+        "isDefined": true,
+        "maxLength": 1000,
+        "minLength": 20
+      },
+      "autoTradeEnabled": true,
+      "intervals": [
+        1800,
+        3600
+      ],
+      "payoutInfo": {
+        "drawRefund": 100,
+        "lossRefund": 0,
+        "winPayout": 82
+      },
+      "symbols": [
+        "AMERICAbo",
+        "ASIAbo",
+        "COMMODbo",
+        "EUROPEbo",
+        "EXOTICSbo",
+        "METALSbo"
+      ]
+    },
+    {
+      "amountRange": {
+        "isDefined": true,
+        "maxLength": 1000,
+        "minLength": 20
+      },
+      "autoTradeEnabled": true,
+      "intervals": [
+        1800,
+        3600
+      ],
+      "payoutInfo": {
+        "drawRefund": 100,
+        "lossRefund": 0,
+        "winPayout": 80
+      },
+      "symbols": [
+        "AUDJPYbo",
+        "AUDUSDbo",
+        "EURGBPbo",
+        "EURJPYbo",
+        "EURUSDbo",
+        "GBPJPYbo",
+        "GBPUSDbo",
+        "NZDJPYbo",
+        "NZDUSDbo",
+        "USDCADbo",
+        "USDCHFbo",
+        "USDJPYbo"
+      ]
+    }
+  ],
+  "requestPeriod": 10000,
+  "securities": [
+    {
+      "description": "[bo]",
+      "name": "Index"
+    },
+    {
+      "description": "[bo]",
+      "name": "BO 2"
+    },
+    {
+      "description": "[bo]",
+      "name": "Binary Options"
+    }
+  ],
+  "serverUrls": [],
+  "symbols": [
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "EURUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "USDJPYbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "GBPUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "AUDUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "USDCHFbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "USDCADbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "NZDUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "EURGBPbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "EURJPYbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "GBPJPYbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "AUDJPYbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "NZDJPYbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "XAGUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 2,
+      "name": "XAUUSDbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "SUMbo",
+      "security": "Binary Options"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "EUROPEbo",
+      "security": "Index"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 3,
+      "name": "ASIAbo",
+      "security": "Index"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "AMERICAbo",
+      "security": "Index"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "EXOTICSbo",
+      "security": "Index"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "METALSbo",
+      "security": "Index"
+    },
+    {
+      "actionTypes": [
+        "UpDown"
+      ],
+      "amountMax": 1000,
+      "amountMin": 20,
+      "amountStep": 5,
+      "digits": 5,
+      "name": "COMMODbo",
+      "security": "Index"
+    }
+  ],
+  "utcOffset": 2
+}

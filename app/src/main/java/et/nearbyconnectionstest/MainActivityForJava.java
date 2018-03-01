@@ -1,9 +1,12 @@
 package et.nearbyconnectionstest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -30,8 +33,15 @@ import com.google.android.gms.nearby.connection.Strategy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 /**
  * Created by William on 2018/2/12.
@@ -221,7 +231,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
                                             // Nearby Connections failed to request the connection.
-                                            Log.d(TAG, "mEndpointDiscoveryCallback : OnFailureListener -> failed");
+                                            Log.d(TAG, "mEndpointDiscoveryCallback : OnFailureListener -> failed ：" + e.fillInStackTrace());
                                         }
                                     });
                 }
@@ -253,6 +263,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
                         case ConnectionsStatusCodes.STATUS_OK:
                             // We're connected! Can now start sending and receiving data.
                             Log.d(TAG, "SEND DATA");
+//                            sendTxtFile(endpointId);
 //                            showImageChooser(endpointId);
 //                            Nearby.getConnectionsClient(MainActivityForJava.this).sendPayload(endpointId, Payload.fromBytes("1111".getBytes()));
                             break;
@@ -277,41 +288,44 @@ public class MainActivityForJava extends Activity implements OnClickListener {
 
         @Override
         public void onPayloadReceived(String payloadId, Payload payload) {
-            byte[] bytes = payload.asBytes();
-            String s = new String(bytes);
-            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + payloadId + " : " + s);
-            incomingPayloads.put(payloadId, payload);
+//            byte[] bytes = payload.asBytes();
+//            String s = new String(bytes);
+//            Log.d(TAG, "mPayloadCallback : onPayloadReceived -> " + payloadId + " : " + s);
+//            incomingPayloads.put(payloadId, payload);
 
-//            if (payload.getType() == Payload.Type.BYTES){
-//                String payloadFilenameMessage = new String(payload.asBytes(), Charset.forName("UTF-8"));
-//                if (payloadId != null) {
-//                    addPayloadFilename(payloadFilenameMessage, payloadId);
-//                }
-//            } else if (payload.getType() == Payload.Type.FILE){
-//                // Add this to our tracking map, so that we can retrieve the payload later.
-//                incomingPayloads.put(payloadId, payload);
-//            }
+            if (payload.getType() == Payload.Type.BYTES){
+                String payloadFilenameMessage = new String(payload.asBytes(), Charset.forName("UTF-8"));
+                if (payloadId != null) {
+                    addPayloadFilename(payloadFilenameMessage, payloadId);
+                }
+            } else if (payload.getType() == Payload.Type.FILE){
+                // Add this to our tracking map, so that we can retrieve the payload later.
+                incomingPayloads.put(payloadId, payload);
+            }
         }
 
         @Override
         public void onPayloadTransferUpdate(String payloadId, PayloadTransferUpdate update) {
             Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + payloadId + " : " + update.toString());
             if (update.getStatus() == PayloadTransferUpdate.Status.SUCCESS){
-//                Payload payload = incomingPayloads.remove(payloadId);
-//                if (payload.getType() == Payload.Type.FILE){
-//                    // Retrieve the filename that was received in a bytes payload.
-//                    String newFilename = filePayloadFilenames.remove(payloadId);
-//
-//                    File payloadFile = payload.asFile().asJavaFile();
-//
-//                    // Rename the file.
-//                    payloadFile.renameTo(new File(payloadFile.getParentFile(), "test.jpg"));
-////                    copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
-//                    Toast.makeText(MainActivityForJava.this, "接收成功", Toast.LENGTH_LONG).show();
-//                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功");
-//                } else if (payload.getType() == Payload.Type.BYTES) {
-                    Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收成功BYTES : " + update.toString());
-//                }
+                //seems file will come there first,so need to limit this
+                if (incomingPayloads.size() > 0) {
+                    Payload payload = incomingPayloads.remove(payloadId);
+                    if (payload.getType() == Payload.Type.FILE){
+                        // Retrieve the filename that was received in a bytes payload.
+                        String newFilename = filePayloadFilenames.remove(payloadId);
+
+                        File payloadFile = payload.asFile().asJavaFile();
+
+                        // Rename the file.
+                        payloadFile.renameTo(new File(payloadFile.getParentFile(), newFilename));
+//                    copyFile(payloadFile.absolutePath, Environment.getExternalStorageDirectory().absolutePath + File.separator + payloadFile.name)
+                        Toast.makeText(MainActivityForJava.this, "接收成功", Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收FILE成功");
+                    } else if (payload.getType() == Payload.Type.BYTES) {
+                        Log.d(TAG, "mPayloadCallback : onPayloadTransferUpdate -> " + "接收BYTES成功 : " + update.toString());
+                    }
+                }
             }
         }
 
@@ -322,7 +336,7 @@ public class MainActivityForJava extends Activity implements OnClickListener {
          * filePayloadFilenames map. The format is payloadId:filename.
          */
         private void addPayloadFilename(String payloadFilenameMessage, String payloadId) {
-            int colonIndex = payloadFilenameMessage.indexOf(':');
+            int colonIndex = payloadFilenameMessage.lastIndexOf('/');
 //            val payloadId = payloadFilenameMessage.substring (0, colonIndex)
             String filename = payloadFilenameMessage.substring(colonIndex + 1);
             filePayloadFilenames.put(payloadId, filename);
@@ -330,4 +344,65 @@ public class MainActivityForJava extends Activity implements OnClickListener {
 
     };
 
+    public void sendTxtFile (String endpointId) {
+
+        // Open the ParcelFileDescriptor for this URI with read access.
+        ParcelFileDescriptor pfd = null;
+        File file = new File("/sdcard/sdl_log.txt");
+        try {
+            Log.d(TAG, "文件是否存在：" + file.exists());
+            pfd = getContentResolver().openFileDescriptor(Uri.fromFile(file), "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        Payload filePayload = Payload.fromFile(pfd);
+
+        // Construct a simple message mapping the ID of the file payload to the desired filename.
+        String payloadFilenameMessage = filePayload.getId() + ":" + file.getAbsolutePath();//uri.getLastPathSegment();
+
+        // Send this message as a bytes payload.
+        try {
+            Nearby.getConnectionsClient(MainActivityForJava.this).sendPayload(
+                    endpointId, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        // Finally, send the file payload.
+        Nearby.getConnectionsClient(MainActivityForJava.this).sendPayload(endpointId, filePayload);
+    }
+//
+//    /**
+//     * 复制单个文件
+//     * @param oldPath String 原文件路径 如：c:/fqf.txt
+//     * @param newPath String 复制后路径 如：f:/fqf.txt
+//     * @return boolean
+//     */
+//    private void copyFile(String oldPath, String newPath) throws FileNotFoundException {
+//        try {
+//            int  bytesum = 0;
+//            int byteread = 0;
+//            File oldfile = new File(oldPath);
+//            if (oldfile.exists()) { //文件存在时
+//                FileInputStream inStream = new FileInputStream(oldPath); //读入原文件
+//                FileOutputStream fs = new FileOutputStream(newPath);
+//                int buffer = ByteArray[1444];
+//                int length;
+////                while ((byteread = inStream.read(buffer)) != -1) {
+//                        byteread = inStream.read(buffer)
+//                while (byteread != -1) {
+//                    bytesum += byteread //字节数 文件大小
+//                    println(bytesum)
+//                    fs.write(buffer, 0, byteread)
+//                    byteread = inStream.read(buffer)
+//                }
+//                inStream.close()
+//            }
+//        } catch (e: Exception) {
+//            Log.d(TAG,"复制单个文件操作出错")
+//            e.printStackTrace()
+//
+//        }
+//
+//    }
 }
